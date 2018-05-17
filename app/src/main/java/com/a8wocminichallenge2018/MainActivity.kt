@@ -16,6 +16,7 @@ import java.net.URL
 
 
 class MainActivity : AppCompatActivity() {
+    private var progressDialog: ProgressDialog? = null
 
     companion object {
         private const val TAG = "MAIN_ACTIVITY"
@@ -26,41 +27,70 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         btn_parse.setOnClickListener {
             Log.i(TAG, "Test")
-            GetUsfm(usfm_to_txt).execute("https://cdn.door43.org/ne/ulb/v5.2/mat.usfm")
+            //Nepali
+            //  GetUsfm(usfm_to_txt).execute("https://cdn.door43.org/ne/ulb/v5.2/mat.usfm")
+
+            //Serbian
+            GetUsfm(usfm_to_txt).execute("https://cdn.door43.org/sr-Latn/stf/v1/mat.usfm")
         }
     }
 
     private inner class GetUsfm(etv: EditText) : AsyncTask<String, Unit, String>() {
+
         val tv: EditText? = etv
-        override fun doInBackground(vararg params: String): String? {
-            var usfm: String? = null
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+            // Showing progress dialog
+            progressDialog = ProgressDialog(tv?.context)
+            progressDialog?.let {
+                with(it) {
+                    setMessage("Please Wait...")
+                    setCancelable(false)
+                    show()
+                }
+            }
+
+
+        }
+
+        override fun doInBackground(vararg params: String): String {
+
             try {
                 val url = URL(params[0])
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 // read the response
                 val bufferStream = BufferedInputStream(conn.inputStream)
-                usfm = convertStreamToString(bufferStream)
+                return convertStreamToString(bufferStream)
             } catch (e: Exception) {
                 Log.e(TAG, e.message)
             }
-            return usfm
+            return "Data Not Found."
         }
 
-        override fun onPostExecute(result: String?) {
+        override fun onPostExecute(result: String) {
             super.onPostExecute(result)
             tv?.setText(result)
+            if (progressDialog!!.isShowing) {
+                progressDialog!!.dismiss()
+            }
         }
 
-        private fun convertStreamToString(inputStream: BufferedInputStream): String? {
+        private fun convertStreamToString(inputStream: BufferedInputStream): String {
+            var count = 0
             val reader = BufferedReader(InputStreamReader(inputStream))
             val sb = StringBuilder()
             var line = ""
             try {
-                do {
-                    sb.append(reader.readLine())
+                while (reader.readLine() != null) {
+                    count += 1
+                    if (count < 3) {
+                        continue
+                    }
+                    sb.append(stripOf(reader.readLine()))
                     sb.append("\n")
-                } while (reader.readLine() != null)
+                }
             } catch (e: IOException) {
                 e.printStackTrace()
             } finally {
@@ -68,6 +98,19 @@ class MainActivity : AppCompatActivity() {
                     inputStream.close()
                 } catch (e: IOException) {
                     e.printStackTrace()
+                }
+
+            }
+            return sb.toString()
+        }
+
+        private fun stripOf(string: String): String {
+            val sb = StringBuilder()
+            val splitedStringList = string.split(" ")
+            for (s in splitedStringList) {
+                if (!s.contains("\\")) {
+                    sb.append(s)
+                    sb.append(" ")
                 }
 
             }
