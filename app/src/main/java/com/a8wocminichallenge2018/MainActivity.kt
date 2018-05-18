@@ -37,11 +37,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val theme = getSharedPref()
-//        if (theme == "dark") {
-//            setTheme(R.style.DarkTheme)
-//        } else {
+        if (theme == "dark") {
+            setTheme(R.style.DarkTheme)
+        } else {
             setTheme(R.style.AppTheme)
-//        }
+        }
         setContentView(R.layout.activity_main)
         btnView = btn_view
         urlEditTv = url
@@ -80,19 +80,14 @@ class MainActivity : AppCompatActivity() {
         when (item?.itemId) {
             android.R.id.home -> {
                 startActivity(Intent(this, MainActivity::class.java))
-                finish()
-                true
             }
             R.id.dark_theme -> {
                 writeSharedPref("dark")
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
-
+                this.recreate()
             }
             R.id.light_theme -> {
                 writeSharedPref("light")
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
+                this.recreate()
             }
         }
         return super.onOptionsItemSelected(item)
