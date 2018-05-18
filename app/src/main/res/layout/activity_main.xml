@@ -41,10 +41,10 @@
         android:clickable="false"
         android:ems="10"
         android:focusable="false"
-        android:gravity="center_horizontal"
         android:hint="@string/txt_hint_converted_txt"
         android:inputType="textMultiLine"
         android:scrollbars="vertical"
+        android:textDirection="ltr"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_view" />

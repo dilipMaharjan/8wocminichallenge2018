@@ -3,18 +3,15 @@ package com.a8wocminichallenge2018
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.text.InputType
 import android.util.Log
 import android.util.Patterns
 import android.view.MenuItem
 import android.view.View
-import android.view.Window
-import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import android.webkit.URLUtil
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -32,6 +29,8 @@ class MainActivity : AppCompatActivity() {
     private var urlEditTv: EditText? = null
     private var btnView: Button? = null
 
+    private var prefs: SharedPreferences? = null
+
     companion object {
         private const val TAG = "MAIN_ACTIVITY"
     }
@@ -39,11 +38,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        prefs = getSharedPreferences("MainActivity", 0)
         btnView = btn_view
         urlEditTv = url
 
         btn_view.setOnClickListener {
+            supportActionBar!!.setDisplayHomeAsUpEnabled(true)
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(url.windowToken, 0)
 
@@ -69,11 +69,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            android.R.id.home -> item.setOnMenuItemClickListener {
+            android.R.id.home -> {
                 startActivity(Intent(this, MainActivity::class.java))
+                finish()
                 true
             }
-
         }
         return super.onOptionsItemSelected(item)
     }
@@ -93,23 +93,21 @@ class MainActivity : AppCompatActivity() {
                     show()
                 }
             }
-
-
         }
 
         override fun doInBackground(vararg params: String): String {
-
+            var str = "Data Not Found."
             try {
                 val url = URL(params[0])
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 // read the response
                 val bufferStream = BufferedInputStream(conn.inputStream)
-                return convertStreamToString(bufferStream)
+                str = convertStreamToString(bufferStream)
             } catch (e: Exception) {
                 Log.e(TAG, e.message)
             }
-            return "Data Not Found."
+            return str
         }
 
         override fun onPostExecute(result: String) {
@@ -126,15 +124,18 @@ class MainActivity : AppCompatActivity() {
             var count = 0
             val reader = BufferedReader(InputStreamReader(inputStream))
             val sb = StringBuilder()
-            var line = ""
+            var line: String? = null
             try {
-                while (reader.readLine() != null) {
-                    count += 1
-                    if (count < 3) {
+                while ({ line = reader.readLine(); line }() != null) {
+                    if (count > 6) {
+                        if (line == "") continue
+                        sb.append(stripOf(line!!))
+                        if (sb.toString().last() == '\n') continue
+                        sb.append('\n')
+                    } else {
+                        count += 1
                         continue
                     }
-                    sb.append(stripOf(reader.readLine()))
-                    sb.append("\n")
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
