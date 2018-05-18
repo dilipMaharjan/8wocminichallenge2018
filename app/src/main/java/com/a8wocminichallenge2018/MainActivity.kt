@@ -1,8 +1,11 @@
 package com.a8wocminichallenge2018
 
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -16,6 +19,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.user_input_form.*
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.IOException
@@ -43,11 +47,11 @@ class MainActivity : AppCompatActivity() {
             setTheme(R.style.AppTheme)
         }
         setContentView(R.layout.activity_main)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         btnView = btn_view
         urlEditTv = url
 
         btn_view.setOnClickListener {
-            supportActionBar!!.setDisplayHomeAsUpEnabled(true)
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(url.windowToken, 0)
 
@@ -68,6 +72,50 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Url cannot be empty.", Toast.LENGTH_SHORT).show()
             }
+        }
+        btn_or.setOnClickListener {
+            val view = layoutInflater.inflate(R.layout.user_input_form, null)
+
+            val alertDialog = AlertDialog.Builder(this, if (getSharedPref() == "dark") R.style.AlerDarkTheme else 0)
+            alertDialog.setView(view)
+            alertDialog.setTitle("Fill in the info")
+            alertDialog.setCancelable(false)
+            val bookNameEt = view.findViewById<View>(R.id.book_name) as EditText
+            val chapterNumberEt = view.findViewById<View>(R.id.chapter_number) as EditText
+            val startVerseEt = view.findViewById<View>(R.id.start_verse) as EditText
+            val endVerseEt = view.findViewById<View>(R.id.end_verse) as EditText
+
+            alertDialog.setPositiveButton("View", DialogInterface.OnClickListener { dialog, whichButton ->
+                val bookName = bookNameEt.text.toString()
+                val chapterNumber = chapterNumberEt.text.toString()
+                val startVerse = startVerseEt.text.toString()
+                val endVerse = endVerseEt.text.toString()
+                val uriBuilder = Uri.Builder()
+                uriBuilder.scheme("https")
+                        .authority("cdn.door43.org")
+                        .appendPath("ne")
+                        .appendPath("ulb")
+                        .appendPath("v5.2")
+                if (bookName.isNotEmpty() && bookName.isNotBlank()) {
+                    uriBuilder.appendPath(getIdentifier(bookName))
+                    if (chapterNumber.isNotEmpty() && chapterNumber.isNotBlank()) {
+                    }
+                    if (startVerse.isNotEmpty() && startVerse.isNotBlank()) {
+
+                    }
+                    if (endVerse.isNotEmpty() && endVerse.isNotBlank()) {
+
+                    }
+                    GetUsfm(usfm_to_txt).execute(uriBuilder.toString())
+                } else {
+                    Toast.makeText(this, "Book name cannot be empty.", Toast.LENGTH_SHORT).show()
+                }
+            })
+            alertDialog.setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, whichButton ->
+                dialog.dismiss()
+            })
+
+            alertDialog.create().show()
         }
     }
 
@@ -133,6 +181,7 @@ class MainActivity : AppCompatActivity() {
             }
             urlEditTv!!.visibility = View.GONE
             btnView!!.visibility = View.GONE
+            btn_or!!.visibility = View.GONE
         }
 
         private fun convertStreamToString(inputStream: BufferedInputStream): String {
@@ -191,4 +240,23 @@ class MainActivity : AppCompatActivity() {
         return sharedPref.getString("theme_name", "")
     }
 
+    private fun getIdentifier(bookName: String): String {
+        var identifier = ""
+        val bookname = bookName.toLowerCase()
+        val list = identifierList()
+        if (bookname in list.keys) {
+            identifier = list.getValue(bookname)
+        }
+        return identifier.plus(".usfm")
+    }
+
+    private fun identifierList(): Map<String, String> {
+        return mapOf(
+                "mathew" to "mat",
+                "mark" to "mrk",
+                "luke" to "luk",
+                "john" to "jhn",
+                "acts" to "act"
+        )
+    }
 }

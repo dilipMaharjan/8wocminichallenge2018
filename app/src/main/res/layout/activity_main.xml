@@ -62,4 +62,15 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.75" />
+
+    <Button
+        android:id="@+id/btn_or"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="Or"
+        app:layout_constraintBaseline_toBaselineOf="@+id/url"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/url" />
 </android.support.constraint.ConstraintLayout>
