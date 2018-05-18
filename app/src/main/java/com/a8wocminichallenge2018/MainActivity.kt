@@ -3,12 +3,12 @@ package com.a8wocminichallenge2018
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.util.Patterns
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     private var urlEditTv: EditText? = null
     private var btnView: Button? = null
 
-    private var prefs: SharedPreferences? = null
 
     companion object {
         private const val TAG = "MAIN_ACTIVITY"
@@ -37,8 +36,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val theme = getSharedPref()
+//        if (theme == "dark") {
+//            setTheme(R.style.DarkTheme)
+//        } else {
+            setTheme(R.style.AppTheme)
+//        }
         setContentView(R.layout.activity_main)
-        prefs = getSharedPreferences("MainActivity", 0)
         btnView = btn_view
         urlEditTv = url
 
@@ -67,12 +71,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             android.R.id.home -> {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
                 true
+            }
+            R.id.dark_theme -> {
+                writeSharedPref("dark")
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+
+            }
+            R.id.light_theme -> {
+                writeSharedPref("light")
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
             }
         }
         return super.onOptionsItemSelected(item)
@@ -162,6 +182,18 @@ class MainActivity : AppCompatActivity() {
             }
             return sb.toString()
         }
+    }
+
+    private fun writeSharedPref(theme_name: String) {
+        val sharedPref = getSharedPreferences("theme", 0)
+        val editor = sharedPref.edit()
+        editor.putString("theme_name", theme_name)
+        editor.commit()
+    }
+
+    private fun getSharedPref(): String {
+        val sharedPref = getSharedPreferences("theme", 0)
+        return sharedPref.getString("theme_name", "")
     }
 
 }
