@@ -19,7 +19,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.user_input_form.*
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.IOException
@@ -32,7 +31,9 @@ class MainActivity : AppCompatActivity() {
     private var progressDialog: ProgressDialog? = null
     private var urlEditTv: EditText? = null
     private var btnView: Button? = null
-
+    private var chapterNum = 0
+    private var startVerseNum = 0
+    private var endVerseNum = 0
 
     companion object {
         private const val TAG = "MAIN_ACTIVITY"
@@ -99,12 +100,13 @@ class MainActivity : AppCompatActivity() {
                 if (bookName.isNotEmpty() && bookName.isNotBlank()) {
                     uriBuilder.appendPath(getIdentifier(bookName))
                     if (chapterNumber.isNotEmpty() && chapterNumber.isNotBlank()) {
+                        chapterNum = chapterNumber.toInt()
                     }
                     if (startVerse.isNotEmpty() && startVerse.isNotBlank()) {
-
+                        startVerseNum = startVerse.toInt()
                     }
                     if (endVerse.isNotEmpty() && endVerse.isNotBlank()) {
-
+                        endVerseNum = endVerse.toInt()
                     }
                     GetUsfm(usfm_to_txt).execute(uriBuilder.toString())
                 } else {
@@ -159,7 +161,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun doInBackground(vararg params: String): String {
-            var str = "Data Not Found."
+            var str = "Data Not Found"
             try {
                 val url = URL(params[0])
                 val conn = url.openConnection() as HttpURLConnection
@@ -167,6 +169,9 @@ class MainActivity : AppCompatActivity() {
                 // read the response
                 val bufferStream = BufferedInputStream(conn.inputStream)
                 str = convertStreamToString(bufferStream)
+                if (str.isBlank() && str.isEmpty()) {
+                    str = "Data Not Found"
+                }
             } catch (e: Exception) {
                 Log.e(TAG, e.message)
             }
@@ -189,11 +194,15 @@ class MainActivity : AppCompatActivity() {
             val reader = BufferedReader(InputStreamReader(inputStream))
             val sb = StringBuilder()
             var line: String? = null
+            val list = ArrayList<String>()
             try {
                 while ({ line = reader.readLine(); line }() != null) {
                     if (count > 6) {
-                        if (line == "") continue
-                        sb.append(stripOf(line!!))
+                        if (line!!.isEmpty() || line!!.isBlank()) continue
+                        val cleanedLine: String? = stripOf(line!!)
+                        if (cleanedLine!!.isBlank() && cleanedLine.isEmpty()) continue
+                        list.add(cleanedLine)
+                        sb.append(cleanedLine)
                         if (sb.toString().last() == '\n') continue
                         sb.append('\n')
                     } else {
@@ -211,6 +220,13 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
+            if (chapterNum > 0) {
+                if (startVerseNum > 0 || endVerseNum > 0) {
+                    return getVerse(startVerseNum, endVerseNum)
+                }
+                return getChapter(chapterNum, list)
+            }
+
             return sb.toString()
         }
 
@@ -224,7 +240,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
-            return sb.toString()
+            return sb.toString().trim()
         }
     }
 
@@ -252,11 +268,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun identifierList(): Map<String, String> {
         return mapOf(
-                "mathew" to "mat",
+                "matthew" to "mat",
                 "mark" to "mrk",
                 "luke" to "luk",
                 "john" to "jhn",
                 "acts" to "act"
         )
+    }
+
+    fun getChapter(chapterNumber: Int, list: List<String>): String {
+        val sb = StringBuilder()
+        sb.append(list[0]).append("\n")
+        var found = false
+        for (l in list) {
+            try {
+                if (l.toInt() == chapterNumber) {
+                    found = true
+                    sb.append(l).append("\n")
+                } else if (l.toInt() is Int) {
+                    found = false
+                    continue
+                }
+            } catch (ex: NumberFormatException) {
+                if (found) {
+                    sb.append(l).append("\n")
+                }
+                continue
+            }
+        }
+        return sb.toString()
+    }
+
+    private fun getVerse(startVerse: Int, endVerse: Int): String {
+        return ""
     }
 }
