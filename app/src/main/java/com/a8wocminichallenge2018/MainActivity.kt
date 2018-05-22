@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity() {
             }
             if (chapterNum > 0) {
                 if (startVerseNum > 0 || endVerseNum > 0) {
-                    return getVerse(startVerseNum, endVerseNum)
+                    return getVerse(startVerseNum, endVerseNum, getChapter(chapterNum, list))
                 }
                 return getChapter(chapterNum, list)
             }
@@ -299,7 +299,19 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    private fun getVerse(startVerse: Int, endVerse: Int): String {
-        return ""
+    private fun getVerse(startVerse: Int, endVerse: Int, getChapter: String): String {
+        val sb = StringBuilder()
+        val verses = getChapter.split("\n")
+        var enV = endVerse
+        if (startVerse > endVerse) {
+            enV = verses.size
+        }else{
+            enV+=2
+        }
+        val sublist = verses.subList(startVerse + 1, enV)
+        for (s in sublist) {
+            sb.append(s).append("").append("\n")
+        }
+        return sb.toString()
     }
 }
