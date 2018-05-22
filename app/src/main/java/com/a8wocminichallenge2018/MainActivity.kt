@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
         when (item?.itemId) {
             android.R.id.home -> {
                 startActivity(Intent(this, MainActivity::class.java))
+                finish()
             }
             R.id.dark_theme -> {
                 writeSharedPref("dark")
