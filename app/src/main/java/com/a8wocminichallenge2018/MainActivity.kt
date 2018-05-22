@@ -303,10 +303,10 @@ class MainActivity : AppCompatActivity() {
         val sb = StringBuilder()
         val verses = getChapter.split("\n")
         var enV = endVerse
-        if (startVerse > endVerse) {
+        if (startVerse > endVerse || endVerse > verses.size) {
             enV = verses.size
-        }else{
-            enV+=2
+        } else {
+            enV += 2
         }
         val sublist = verses.subList(startVerse + 1, enV)
         for (s in sublist) {
